@@ -1,0 +1,35 @@
+name: Download Clang and Upload Artifact
+
+on:
+  workflow_dispatch:          # 手动触发
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download Clang from GitLab
+        run: |
+          # 使用浅克隆（仅最新提交）减少下载量
+          git clone --depth 1 https://gitlab.com/crdroidandroid/android_prebuilts_clang_host_linux-x86_clang-r536225.git
+
+      - name: Create ZIP archive
+        run: |
+          zip -r clang-prebuilt.zip android_prebuilts_clang_host_linux-x86_clang-r536225/
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: clang-prebuilt
+          path: clang-prebuilt.zip
+          retention-days: 7    # 可选，默认保留90天，这里设置为7天
+
+      - name: Output download link
+        run: |
+          # 构建指向当前运行页面 artifacts 区域的链接
+          RUN_URL="https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          echo "ZIP 文件已作为 Artifact 上传。"
+          echo "下载链接（需登录 GitHub）：$RUN_URL"
+          echo "请在运行页面找到 'Artifacts' 部分，点击 'clang-prebuilt' 下载。"
+          # 将链接追加到 GitHub Actions 的步骤摘要中（便于查看）
+          echo "### 📦 下载链接" >> $GITHUB_STEP_SUMMARY
+          echo "请访问 [此运行页面]($RUN_URL) 并下载 Artifact 中的 \`clang-prebuilt.zip\`。" >> $GITHUB_STEP_SUMMARY
